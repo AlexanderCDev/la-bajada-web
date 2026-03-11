@@ -36,15 +36,9 @@ export async function POST(req: NextRequest) {
                 success: `${hostUrl}/success/${order_id}?payment_status=success`,
                 failure: `${hostUrl}/checkout?payment_status=failure`,
                 pending: `${hostUrl}/success/${order_id}?payment_status=pending`
-            }
+            },
+            auto_return: "approved"
         };
-
-        // Mercado Pago solo permite auto_return hacia URLs seguras (https). 
-        // Si estamos en localhost (http), no lo activamos, pero el usuario 
-        // probará dando click al botón "Volver al sitio".
-        if (hostUrl.startsWith("https://")) {
-            preferencePayload.auto_return = "approved";
-        }
 
         const response = await fetch("https://api.mercadopago.com/checkout/preferences", {
             method: "POST",
