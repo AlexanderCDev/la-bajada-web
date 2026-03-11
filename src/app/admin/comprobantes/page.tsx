@@ -95,7 +95,8 @@ export default function ComprobantesPage() {
         }
 
         const receiptNumber = `B001-${selectedOrder.id.split("-")[0].toUpperCase()}`
-        const message = `¡Hola ${selectedOrder.customer_name}! 🥪 Somos La Bajada.\n\nAquí tienes tu comprobante electrónico de tu última compra con nosotros.\n\n🧾 Boleta: ${receiptNumber}\n💰 Monto Total: S/ ${selectedOrder.order_total.toFixed(2)}\n🔗 Puedes ver tu recibo digital aquí: http://localhost:3000/receipt/${selectedOrder.id}\n\n¡Gracias por tu preferencia! Qué lo disfrutes.`
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+        const message = `¡Hola ${selectedOrder.customer_name}! 🥪 Somos La Bajada.\n\nAquí tienes tu comprobante electrónico de tu última compra con nosotros.\n\n🧾 Boleta: ${receiptNumber}\n💰 Monto Total: S/ ${selectedOrder.order_total.toFixed(2)}\n🔗 Puedes ver tu recibo digital aquí: ${siteUrl}/receipt/${selectedOrder.id}\n\n¡Gracias por tu preferencia! Qué lo disfrutes.`
 
         const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
         window.open(whatsappUrl, '_blank')
