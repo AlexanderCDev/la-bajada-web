@@ -19,18 +19,27 @@ export default function OrderSuccessPage() {
     // Check if coming back from Mercado Pago success
     const isPaymentSuccess = searchParams.get('payment_status') === 'success';
 
+    const [confirming, setConfirming] = useState(isPaymentSuccess)
+
     useEffect(() => {
         const confirmOrder = async () => {
             if (isPaymentSuccess && orderId) {
-                // Get current status
-                const { data } = await supabase.from('orders').select('status, payment_status').eq('id', orderId).single()
+                setConfirming(true)
+                try {
+                    // Get current status
+                    const { data } = await supabase.from('orders').select('status, payment_status').eq('id', orderId).single()
 
-                // Only update if it's currently pending
-                if (data && data.status === 'Pendiente de Pago') {
-                    await supabase.from('orders').update({
-                        status: 'Recibido',
-                        payment_status: 'success'
-                    }).eq('id', orderId)
+                    // Only update if it's currently pending
+                    if (data && data.status === 'Pendiente de Pago') {
+                        await supabase.from('orders').update({
+                            status: 'Recibido',
+                            payment_status: 'success'
+                        }).eq('id', orderId)
+                    }
+                } catch (error) {
+                    console.error("Error confirming order:", error)
+                } finally {
+                    setConfirming(false)
                 }
             }
         }

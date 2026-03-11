@@ -30,6 +30,7 @@ type Order = {
 }
 
 const COLUMNS = [
+    { id: "Pendiente de Pago", label: "⏳ Pago Pendiente", bg: "bg-orange-500/10 text-orange-600 border-orange-200" },
     { id: "Recibido", label: "🟡 Recibido", bg: "bg-yellow-500/10 text-yellow-600 border-yellow-200" },
     { id: "En preparación", label: "🔵 En preparación", bg: "bg-blue-500/10 text-blue-600 border-blue-200" },
     { id: "Listo", label: "🟢 Listo para recoger", bg: "bg-emerald-500/10 text-emerald-600 border-emerald-200" },
@@ -92,6 +93,22 @@ export default function OrdersKanban() {
 
         if (!error) {
             setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o))
+        }
+    }
+
+    const confirmPayment = async (orderId: string) => {
+        if (!window.confirm("¿Seguro que deseas confirmar el pago de este pedido manualmente?")) return
+
+        const { error } = await supabase
+            .from("orders")
+            .update({
+                status: "Recibido",
+                payment_status: "success"
+            })
+            .eq("id", orderId)
+
+        if (!error) {
+            setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: "Recibido", payment_status: "success" } : o))
         }
     }
 
@@ -185,14 +202,22 @@ export default function OrdersKanban() {
                                                 </div>
                                             )}
 
-                                            <div className="pt-2 border-t border-border flex flex-wrap gap-2 text-xs">
-                                                {/* Status buttons to move manually if D&D is hard on mobile */}
-                                                {col.id === "Recibido" && <button onClick={() => updateStatus(order.id, "En preparación")} className="bg-blue-500/10 text-blue-600 px-2 py-1 rounded hover:bg-blue-500/20">Preparar &rarr;</button>}
-                                                {col.id === "En preparación" && <button onClick={() => updateStatus(order.id, "Listo")} className="bg-emerald-500/10 text-emerald-600 px-2 py-1 rounded hover:bg-emerald-500/20">Listo &rarr;</button>}
-                                                {col.id === "Listo" && order.delivery_type === "Delivery" && <button onClick={() => updateStatus(order.id, "Enviado")} className="bg-purple-500/10 text-purple-600 px-2 py-1 rounded hover:bg-purple-500/20">Enviar &rarr;</button>}
-                                                {(col.id === "Listo" || col.id === "Enviado") && <button onClick={() => updateStatus(order.id, "Completado")} className="bg-foreground/10 text-foreground px-2 py-1 rounded hover:bg-foreground/20">Completar ✓</button>}
-                                                {(col.id !== "Completado") && <button onClick={() => { if (window.confirm("¿Estás seguro de cancelar este pedido?")) updateStatus(order.id, "Cancelado") }} className="bg-red-500/10 text-red-600 px-2 py-1 rounded hover:bg-red-500/20 ml-auto">Cancelar ❌</button>}
-                                            </div>
+                                             <div className="pt-2 border-t border-border flex flex-wrap gap-2 text-xs">
+                                                 {/* Status buttons to move manually if D&D is hard on mobile */}
+                                                 {col.id === "Pendiente de Pago" && (
+                                                     <button
+                                                         onClick={() => confirmPayment(order.id)}
+                                                         className="bg-green-500/10 text-green-600 px-2 py-1 rounded hover:bg-green-500/20 font-bold"
+                                                     >
+                                                         Confirmar Pago ✓
+                                                     </button>
+                                                 )}
+                                                 {col.id === "Recibido" && <button onClick={() => updateStatus(order.id, "En preparación")} className="bg-blue-500/10 text-blue-600 px-2 py-1 rounded hover:bg-blue-500/20">Preparar &rarr;</button>}
+                                                 {col.id === "En preparación" && <button onClick={() => updateStatus(order.id, "Listo")} className="bg-emerald-500/10 text-emerald-600 px-2 py-1 rounded hover:bg-emerald-500/20">Listo &rarr;</button>}
+                                                 {col.id === "Listo" && order.delivery_type === "Delivery" && <button onClick={() => updateStatus(order.id, "Enviado")} className="bg-purple-500/10 text-purple-600 px-2 py-1 rounded hover:bg-purple-500/20">Enviar &rarr;</button>}
+                                                 {(col.id === "Listo" || col.id === "Enviado") && <button onClick={() => updateStatus(order.id, "Completado")} className="bg-foreground/10 text-foreground px-2 py-1 rounded hover:bg-foreground/20">Completar ✓</button>}
+                                                 {(col.id !== "Completado") && <button onClick={() => { if (window.confirm("¿Estás seguro de cancelar este pedido?")) updateStatus(order.id, "Cancelado") }} className="bg-red-500/10 text-red-600 px-2 py-1 rounded hover:bg-red-500/20 ml-auto">Cancelar ❌</button>}
+                                             </div>
                                         </CardContent>
                                     </Card>
                                 ))}
