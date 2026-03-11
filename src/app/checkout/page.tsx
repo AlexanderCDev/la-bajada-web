@@ -120,8 +120,9 @@ export default function CheckoutPage() {
                 // Redirect user to Mercado Pago Checkout Pro
                 window.location.href = mpData.init_point
             } else {
-                toast.error("Error iniciando el pago contáctanos")
-                console.error("MP Error:", mpData.error)
+                const errorMsg = mpData.details || mpData.error || "Error desconocido";
+                toast.error(`Error iniciando el pago: ${errorMsg}`);
+                console.error("MP Error Details:", mpData);
             }
 
         } catch (error) {

@@ -8,22 +8,28 @@ export async function POST(req: NextRequest) {
 
         // MercadoPago requires an access token. Using a dummy token for now if not provided,
         // but the user will provide their real token in .env.local
-        const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
+        // Limpiamos el token de posibles comillas que se hayan quedado pegadas al copiar/pegar
+        const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN?.replace(/^"|"$/g, '').trim();
+
         if (!accessToken) {
-            console.warn("MERCADOPAGO_ACCESS_TOKEN is not set in environment variables");
-            // We can return a mock success for testing locally if no token is provided, or better, return error.
+            console.error("MERCADOPAGO_ACCESS_TOKEN is not set in environment variables");
             return NextResponse.json({ error: "Faltan credenciales de pago" }, { status: 500 });
         }
 
         const client = new MercadoPagoConfig({ accessToken, options: { timeout: 5000 } });
         const preference = new Preference(client);
 
-        const mpItems = items.map((item: any) => ({
-            id: String(item.product_id || "promo"),
-            title: item.title,
-            quantity: item.quantity,
-            unit_price: Number(item.unit_price)
-        }));
+        const mpItems = items.map((item: any) => {
+            // Limpiamos caracteres especiales del título que puedan molestar a MP
+            const cleanTitle = item.title.replace(/[()%-]/g, '').trim();
+            
+            return {
+                id: String(item.product_id || "promo"),
+                title: cleanTitle,
+                quantity: item.quantity,
+                unit_price: Number(item.unit_price)
+            };
+        });
 
         const hostUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
